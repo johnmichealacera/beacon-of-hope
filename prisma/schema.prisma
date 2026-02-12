@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Category {
+  GRATITUDE
+  HOPE
+  PRAYER
+  CONFESSION
+  DREAM
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String   @db.VarChar(300)
+  category  Category
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([category])
+}

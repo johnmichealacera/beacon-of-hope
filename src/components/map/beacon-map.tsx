@@ -1,0 +1,95 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { MapContainer, TileLayer } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+
+import type { BeaconMessage, MapClickEvent } from "@/lib/types";
+import { MapClickHandler } from "./map-click-handler";
+import { BeaconMarker } from "./beacon-marker";
+import { Header } from "@/components/header";
+import { CreateLightDialog } from "@/components/modals/create-light-dialog";
+import { ViewMessageDialog } from "@/components/modals/view-message-dialog";
+
+interface BeaconMapProps {
+  initialMessages: BeaconMessage[];
+}
+
+const BUCAS_GRANDE_CENTER: [number, number] = [9.85, 125.97];
+const TILE_URL =
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
+export function BeaconMap({ initialMessages }: BeaconMapProps) {
+  const [messages, setMessages] = useState<BeaconMessage[]>(initialMessages);
+  const [clickedPosition, setClickedPosition] = useState<MapClickEvent | null>(
+    null
+  );
+  const [viewingMessage, setViewingMessage] = useState<BeaconMessage | null>(
+    null
+  );
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  function handleMapClick(event: MapClickEvent) {
+    console.log("[Beacon] Map clicked at:", event.lat, event.lng);
+    setClickedPosition(event);
+  }
+
+  function handleMessageCreated(newMessage: BeaconMessage) {
+    setMessages((prev) => [newMessage, ...prev]);
+    setClickedPosition(null);
+  }
+
+  if (!mounted) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[#0a0a0f]">
+        <p className="animate-pulse font-serif text-lg tracking-wide text-[#8a8a9a]">
+          Gathering light...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-screen w-screen overflow-hidden">
+      <Header />
+
+      <MapContainer
+        center={BUCAS_GRANDE_CENTER}
+        zoom={13}
+        style={{ height: "100%", width: "100%" }}
+        zoomControl={true}
+        attributionControl={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          url={TILE_URL}
+        />
+
+        <MapClickHandler onClick={handleMapClick} />
+
+        {messages.map((message) => (
+          <BeaconMarker
+            key={message.id}
+            message={message}
+            onClick={setViewingMessage}
+          />
+        ))}
+      </MapContainer>
+
+      <CreateLightDialog
+        position={clickedPosition}
+        onClose={() => setClickedPosition(null)}
+        onCreated={handleMessageCreated}
+      />
+
+      <ViewMessageDialog
+        message={viewingMessage}
+        onClose={() => setViewingMessage(null)}
+      />
+    </div>
+  );
+}

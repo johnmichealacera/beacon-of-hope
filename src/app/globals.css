@@ -1,0 +1,194 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-playfair);
+  --font-mono: var(--font-geist-mono);
+  --color-ink: #0a0a0f;
+  --color-bone: #e8e0d4;
+  --color-rose: #d4a574;
+  --color-gratitude: #D4A574;
+  --color-hope: #7BA7CC;
+  --color-prayer: #E8E0D4;
+  --color-confession: #9B7DB8;
+  --color-dream: #8FB896;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #0a0a0f;
+  --foreground: #e8e0d4;
+  --card: #111118;
+  --card-foreground: #e8e0d4;
+  --popover: #111118;
+  --popover-foreground: #e8e0d4;
+  --primary: #e8e0d4;
+  --primary-foreground: #0a0a0f;
+  --secondary: #1a1a24;
+  --secondary-foreground: #e8e0d4;
+  --muted: #1a1a24;
+  --muted-foreground: #8a8a9a;
+  --accent: #1a1a24;
+  --accent-foreground: #e8e0d4;
+  --destructive: #b33a3a;
+  --border: rgba(232, 224, 212, 0.08);
+  --input: rgba(232, 224, 212, 0.12);
+  --ring: rgba(212, 165, 116, 0.3);
+}
+
+/* ── Animations ── */
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Beacon Markers ── */
+
+.beacon-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse-glow 3s ease-in-out infinite;
+  cursor: pointer;
+  position: relative;
+}
+
+.beacon-marker::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.beacon-gratitude {
+  background: #D4A574;
+  box-shadow: 0 0 8px 3px rgba(212, 165, 116, 0.5), 0 0 20px 6px rgba(212, 165, 116, 0.2);
+}
+.beacon-gratitude::after {
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.25) 0%, transparent 70%);
+}
+
+.beacon-hope {
+  background: #7BA7CC;
+  box-shadow: 0 0 8px 3px rgba(123, 167, 204, 0.5), 0 0 20px 6px rgba(123, 167, 204, 0.2);
+}
+.beacon-hope::after {
+  background: radial-gradient(circle, rgba(123, 167, 204, 0.25) 0%, transparent 70%);
+}
+
+.beacon-prayer {
+  background: #E8E0D4;
+  box-shadow: 0 0 8px 3px rgba(232, 224, 212, 0.4), 0 0 20px 6px rgba(232, 224, 212, 0.15);
+}
+.beacon-prayer::after {
+  background: radial-gradient(circle, rgba(232, 224, 212, 0.2) 0%, transparent 70%);
+}
+
+.beacon-confession {
+  background: #9B7DB8;
+  box-shadow: 0 0 8px 3px rgba(155, 125, 184, 0.5), 0 0 20px 6px rgba(155, 125, 184, 0.2);
+}
+.beacon-confession::after {
+  background: radial-gradient(circle, rgba(155, 125, 184, 0.25) 0%, transparent 70%);
+}
+
+.beacon-dream {
+  background: #8FB896;
+  box-shadow: 0 0 8px 3px rgba(143, 184, 150, 0.5), 0 0 20px 6px rgba(143, 184, 150, 0.2);
+}
+.beacon-dream::after {
+  background: radial-gradient(circle, rgba(143, 184, 150, 0.25) 0%, transparent 70%);
+}
+
+/* ── Leaflet Overrides ── */
+
+.leaflet-container {
+  background: #0a0a0f !important;
+  font-family: var(--font-sans) !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(10, 10, 15, 0.8) !important;
+  color: #4a4a5a !important;
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #6a6a7a !important;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(17, 17, 24, 0.9) !important;
+  color: #8a8a9a !important;
+  border-color: rgba(232, 224, 212, 0.08) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(26, 26, 36, 0.95) !important;
+  color: #e8e0d4 !important;
+}
+
+/* ── Base ── */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
