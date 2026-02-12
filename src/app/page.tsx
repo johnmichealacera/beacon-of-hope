@@ -2,7 +2,6 @@ import { prisma } from "@/lib/db";
 import { MapWrapper } from "@/components/map/map-wrapper";
 import type { BeaconMessage } from "@/lib/types";
 import type { CategoryKey } from "@/lib/categories";
-import type { Message } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +11,7 @@ export default async function HomePage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const messages: BeaconMessage[] = rawMessages.map((m: Message) => ({
+  const messages: BeaconMessage[] = rawMessages.map((m) => ({
     id: m.id,
     content: m.content,
     category: m.category as CategoryKey,

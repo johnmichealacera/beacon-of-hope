@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -15,6 +15,10 @@ interface BeaconMapProps {
   initialMessages: BeaconMessage[];
 }
 
+const subscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 const BUCAS_GRANDE_CENTER: [number, number] = [9.85, 125.97];
 const TILE_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
@@ -27,11 +31,7 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
   const [viewingMessage, setViewingMessage] = useState<BeaconMessage | null>(
     null
   );
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   function handleMapClick(event: MapClickEvent) {
     console.log("[Beacon] Map clicked at:", event.lat, event.lng);
