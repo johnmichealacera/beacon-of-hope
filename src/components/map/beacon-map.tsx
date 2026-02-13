@@ -20,8 +20,10 @@ const getSnapshot = () => true;
 const getServerSnapshot = () => false;
 
 const BUCAS_GRANDE_CENTER: [number, number] = [9.85, 125.97];
-const TILE_URL =
-  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const SATELLITE_URL =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const LABELS_URL =
+  "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png";
 
 export function BeaconMap({ initialMessages }: BeaconMapProps) {
   const [messages, setMessages] = useState<BeaconMessage[]>(initialMessages);
@@ -59,14 +61,18 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
 
       <MapContainer
         center={BUCAS_GRANDE_CENTER}
-        zoom={13}
+        zoom={14}
         style={{ height: "100%", width: "100%" }}
         zoomControl={true}
         attributionControl={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
-          url={TILE_URL}
+          attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Source: Esri, Maxar, Earthstar Geographics'
+          url={SATELLITE_URL}
+        />
+        <TileLayer
+          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+          url={LABELS_URL}
         />
 
         <MapClickHandler onClick={handleMapClick} />
