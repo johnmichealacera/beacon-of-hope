@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -18,12 +18,22 @@ interface BeaconMapProps {
 const subscribe = () => () => {};
 const getSnapshot = () => true;
 const getServerSnapshot = () => false;
+const BUCAS_GRANDE_CENTER: [number, number] = [9.620258, 125.958631];
 
-const BUCAS_GRANDE_CENTER: [number, number] = [9.85, 125.97];
 const SATELLITE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-const LABELS_URL =
-  "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png";
+const LIGHT_LABELS_URL =
+  "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png";
+const DARK_ALL_URL =
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
+function isDaytime(): boolean {
+  const now = new Date();
+  const phHour = parseInt(
+    now.toLocaleString("en-US", { timeZone: "Asia/Manila", hour: "numeric", hour12: false })
+  );
+  return phHour >= 6 && phHour < 18;
+}
 
 export function BeaconMap({ initialMessages }: BeaconMapProps) {
   const [messages, setMessages] = useState<BeaconMessage[]>(initialMessages);
@@ -33,7 +43,13 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
   const [viewingMessage, setViewingMessage] = useState<BeaconMessage | null>(
     null
   );
+  const [isDay, setIsDay] = useState(isDaytime);
   const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  useEffect(() => {
+    const interval = setInterval(() => setIsDay(isDaytime()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   function handleMapClick(event: MapClickEvent) {
     console.log("[Beacon] Map clicked at:", event.lat, event.lng);
@@ -62,18 +78,34 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
       <MapContainer
         center={BUCAS_GRANDE_CENTER}
         zoom={14}
-        style={{ height: "100%", width: "100%" }}
+        style={{
+          height: "100%",
+          width: "100%",
+          background: isDay ? "#0d1117" : "#0a0a0f",
+        }}
         zoomControl={true}
         attributionControl={true}
       >
-        <TileLayer
-          attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Source: Esri, Maxar, Earthstar Geographics'
-          url={SATELLITE_URL}
-        />
-        <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url={LABELS_URL}
-        />
+        {isDay ? (
+          <>
+            <TileLayer
+              key="satellite"
+              attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Source: Esri, Maxar, Earthstar Geographics'
+              url={SATELLITE_URL}
+            />
+            <TileLayer
+              key="light-labels"
+              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              url={LIGHT_LABELS_URL}
+            />
+          </>
+        ) : (
+          <TileLayer
+            key="dark-all"
+            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url={DARK_ALL_URL}
+          />
+        )}
 
         <MapClickHandler onClick={handleMapClick} />
 
