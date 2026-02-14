@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import type { BeaconMessage, MapClickEvent } from "@/lib/types";
@@ -27,6 +28,12 @@ const LIGHT_LABELS_URL =
 const DARK_ALL_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
+function MapRef({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
+  const map = useMap();
+  mapRef.current = map;
+  return null;
+}
+
 function isDaytime(): boolean {
   const now = new Date();
   const phHour = parseInt(
@@ -44,6 +51,9 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
     null
   );
   const [isDay, setIsDay] = useState(isDaytime);
+  const [locating, setLocating] = useState(false);
+  const fromGeolocation = useRef(false);
+  const mapRef = useRef<LeafletMap | null>(null);
   const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   useEffect(() => {
@@ -52,13 +62,32 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
   }, []);
 
   function handleMapClick(event: MapClickEvent) {
-    console.log("[Beacon] Map clicked at:", event.lat, event.lng);
+    fromGeolocation.current = false;
     setClickedPosition(event);
+  }
+
+  function handleUseMyLocation() {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        fromGeolocation.current = true;
+        setClickedPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }
 
   function handleMessageCreated(newMessage: BeaconMessage) {
     setMessages((prev) => [newMessage, ...prev]);
     setClickedPosition(null);
+
+    if (fromGeolocation.current && mapRef.current) {
+      mapRef.current.flyTo([newMessage.lat, newMessage.lng], 14, { duration: 2 });
+      fromGeolocation.current = false;
+    }
   }
 
   if (!mounted) {
@@ -78,6 +107,10 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
       <MapContainer
         center={BUCAS_GRANDE_CENTER}
         zoom={14}
+        minZoom={3}
+        maxBoundsViscosity={1.0}
+        maxBounds={[[-85, -180], [85, 180]]}
+        worldCopyJump={false}
         style={{
           height: "100%",
           width: "100%",
@@ -92,11 +125,13 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
               key="satellite"
               attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Source: Esri, Maxar, Earthstar Geographics'
               url={SATELLITE_URL}
+              noWrap={true}
             />
             <TileLayer
               key="light-labels"
               attribution='&copy; <a href="https://carto.com/">CARTO</a>'
               url={LIGHT_LABELS_URL}
+              noWrap={true}
             />
           </>
         ) : (
@@ -104,9 +139,11 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
             key="dark-all"
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
             url={DARK_ALL_URL}
+            noWrap={true}
           />
         )}
 
+        <MapRef mapRef={mapRef} />
         <MapClickHandler onClick={handleMapClick} />
 
         {messages.map((message) => (
@@ -117,6 +154,32 @@ export function BeaconMap({ initialMessages }: BeaconMapProps) {
           />
         ))}
       </MapContainer>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-8 z-[1000] flex justify-center">
+        <button
+          onClick={handleUseMyLocation}
+          disabled={locating}
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-[#0a0a0f]/70 px-5 py-2.5 font-serif text-sm tracking-wide text-[#e8e0d4] ring-1 ring-white/5 backdrop-blur-md transition-all hover:bg-[#0a0a0f]/90 disabled:opacity-50"
+          type="button"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={locating ? "animate-pulse" : ""}
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+          </svg>
+          {locating ? "Locating..." : "Light from my location"}
+        </button>
+      </div>
 
       <CreateLightDialog
         position={clickedPosition}
